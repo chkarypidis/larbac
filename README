@@ -1,0 +1,32 @@
+larbac - A LaTeX{}-related batch converter
+Version 1.0
+Charalampos Karypidis
+ch.karypidis@gmail.com
+http://addictiveknowledge.blogspot.com/
+October 21, 2013
+##############################
+##############################
+Introduction
+larbac allows for batch conversion of all files in a given directory from/to LaTeX{}-related file formats: tex, dvi, ps, eps, jpg. It is written in DOS and is therefore usable only on Windows.
+##############################
+##############################
+Installing larbac
+In order for larbac to function properly, you need to have the following files on your computer:
+• latex.exe, dvips.exe: they come with your TEX distribution.
+• ps2eps.pl, bbox.exe: available at: http://www.tm.uka.de/~bless/ps2eps-
+1.64.zip
+• gswin32.exe: GSview
+• nconvert.exe: you need Nconvert and XnView.
+
+After making sure the above files have been installed, you need to execute
+install.bat . This batch file has two missions:
+• to delete (in case of an older installation) and create a "larbac" directory
+in your Program Files;
+• to look for the necessary files (latex.exe, bibtex.exe, ...) in the Program Files directory, to find their absolute path and then store that information in separate files (latex.txt, bibtex.txt, ...) in the new "larbac" directory.
+
+The larger your Program files directory is, the longer the second process may
+take. If you need to shorten this stage, you can indicate a more specific directory for the search. In any case, be sure to verify to existence of the directories. I have used "C: \ Program Files (x86) \ " but this might not suit your operating system.
+##############################
+##############################
+How to use the converter
+Copy/paste the larbat.bat file in the directory containing the files to be converted, double-click on it and follow the instructions.

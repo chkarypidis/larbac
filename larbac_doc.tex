@@ -1,0 +1,202 @@
+\documentclass{article}
+\usepackage[breaklinks=true]{hyperref}
+\usepackage[TS1,T1]{fontenc}
+%\usepackage{amsfonts}
+%\usepackage{amsmath}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{upquote} 
+
+\usepackage{listings}
+\usepackage[framemethod=TikZ]{mdframed}
+\lstset{
+literate={~} {$\sim$}{1}
+}
+
+%\usepackage{spverbatim}
+%\usepackage[round,authoryear]{natbib}
+
+\mdfdefinestyle{code}{middlelinecolor=red,middlelinewidth=2pt,backgroundcolor=red!10,roundcorner=10pt}
+
+
+\begin{document}
+
+\title{larbac - A LaTeX{}-related batch converter\\
+version 1.0}
+
+\author{Charalampos Karypidis\\
+\texttt{ch.karypidis@gmail.com}\\
+\url{http://addictiveknowledge.blogspot.com/}}
+
+\date{\today}
+
+\maketitle
+
+
+\section{Introduction}
+
+larbac allows for batch conversion of all files in a given directory from/to \LaTeX{}-related file formats: tex, dvi, ps, eps, jpg. It is written in DOS and is therefore usable only on Windows.
+
+
+\section{Installing larbac}\label{sec:installing}
+
+In order for \textit{larbac} to function properly, you need to have the following files on your computer:
+
+\begin{itemize}
+	\item latex.exe, dvips.exe: they come with your \TeX{} distribution.
+	\item ps2eps.pl, bbox.exe: available at: \href{http://www.tm.uka.de/~bless/ps2eps-1.64.zip}{http://www.tm.uka.de/~bless/ps2eps-1.64.zip}
+	\item gswin32.exe: \href{http://pages.cs.wisc.edu/~ghost/}{GSview}
+	\item nconvert.exe: you need \href{http://www.xnview.com/en/nconvert/}{Nconvert} and \href{http://www.xnview.com/en/index.php}{XnView}.
+\end{itemize}
+
+After making sure the above files have been installed, you need to execute \textit{install.bat}. This batch file has two missions:
+\begin{itemize}
+\item to delete (in case of an older installation) and create a "larbac" directory in your Program Files;
+\item to look for the necessary files (latex.exe, bibtex.exe, \ldots) in the Program Files directory, to find their absolute path and then store that information in separate files (latex.txt, bibtex.txt, \ldots) in the new "larbac" directory.
+\end{itemize}
+
+The larger your Program files directory is, the longer the second process may take. If you need to shorten this stage, you can indicate a more specific directory for the search. In any case, be sure to verify to existence of the directories. I have used "C:$\backslash{}$Program Files (x86)$\backslash{}$" but this might not suit your operating system.
+
+
+\section{larbac's functions and its syntax}
+
+After verifying that none of the .txt files within the newly created "C:$\backslash{}$Program Files (x86)$\backslash{}$larbac" folder is empty, you can copy/paste the larbac.bat file in any directory you would like and execute it by double-clicking on it.
+
+larbac first creates variables ("set /p ") containing the full path of the executables necessary for the conversions. It then offers five possibilities that I will explain in the following subsections.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{tex2dvi}
+
+\begin{mdframed}[style=code]
+\begin{lstlisting}[breaklines]
+for /f "tokens=*" %%I in ('dir /b *.tex') do (
+call "%latex%" "%%~I"
+call "%bibtex%" "%CD%\%%~I"
+call "%makeindex%" "%CD%\%%~I.idx"
+call "%latex%" "%%~I"
+call "%latex%" "%%~I"
+)
+GOTO cleanup
+\end{lstlisting}
+\end{mdframed}
+
+%\vspace{0.3cm}
+
+The script uses a for operator, which introduces a \href{http://technet.microsoft.com/en-us/library/bb490909.aspx}{loop}. The above code can be interpreted in the following way:
+\begin{itemize}
+\item for (\textit{for}) every .tex file (\textit{.tex}) located in the current directory (\textit{dir}) and whose filename contains any string (\textit{tokens=*})
+\item call latex.exe, bibtex.exe. makeindex.exe and latex.exe again twice to compile each document enough times to avoid errors
+\item then go to the "cleanup" bookmark in this file
+\end{itemize}
+
+\textit{"\%\%I"} represents the value (filename) of the variable. In a nutshell, this means ``execute the following command for any .tex file in the current directory''. The output format will be .dvi . After all files are converted, all auxiliary files (except dvis, evidently) will be deleted.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{dvi2ps}
+
+\begin{mdframed}[style=code]
+\begin{lstlisting}[breaklines]
+for /f "tokens=*" %%I in ('dir /b *.dvi') do (
+call "%dvips%" "%%~I"
+)
+GOTO cleanup
+\end{lstlisting}
+\end{mdframed}
+
+This function calls dvips.exe to convert .dvi files to .ps. Cleanup is then executed.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{tex2ps}
+
+\begin{mdframed}[style=code]
+\begin{lstlisting}[breaklines]
+for /f "tokens=*" %%I in ('dir /b *.tex') do (
+call "%latex%" "%%~I"
+)
+for /f "tokens=*" %%I in ('dir /b *.dvi') do (
+call "%dvips%" "%%~I"
+)
+del "%CD%\*.dvi"
+GOTO cleanup
+\end{lstlisting}
+\end{mdframed}
+
+This function first calls latex.exe to convert the .tex files into .dvi. Then it calls dvips.exe to convert those .dvi files to .ps. In the end, it deletes the .dvi's created in the first stage and then proceeds to cleaning up the rest of the auxiliaries. 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{ps2eps}
+
+\begin{mdframed}[style=code]
+\begin{lstlisting}[breaklines]
+for /f "tokens=*" %%I in ('dir /b *.ps') do (
+call "%ps2eps%" -l -f -n -H "%%~I"
+)
+GOTO exit
+\end{lstlisting}
+\end{mdframed}
+
+This function uses the Perl script ps2eps.pl to convert .ps files into .eps. Do not forget to install this script (see \ref{sec:installing}.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{tex2jpg}
+
+\begin{mdframed}[style=code]
+\begin{lstlisting}[breaklines]
+for /f "tokens=*" %%I in ('dir /b *.tex') do (
+call "%latex%" "%%~I"
+)
+for /f "tokens=*" %%I in ('dir /b *.dvi') do (
+call "%dvips%" "%%~I"
+)
+for /f "tokens=*" %%I in ('dir /b *.ps') do (
+call "%gswin32%" -dBATCH -dNOPAUSE -sDEVICE=jpeg -sOutputFile="%CD%\%%~I.jpg" -r600 "%%~I"
+)
+del "%CD%\*.dvi"
+del "%CD%\*.ps"
+\end{lstlisting}
+\end{mdframed}
+
+This combines tex2dvi and dvi2ps to convert from .tex to .dvi to .ps. It then calls Ghostscript to convert the .ps into a .jpg. All auxiliary (including .dvi's) as well as the .ps files are deleted.
+
+The jpg resolution is fixed at 600 px ("-r600"). You can change at your own convenience. To better understand the other options, visit \href{http://www.ghostscript.com/doc/current/Use.htm}{the Ghostscript manual}.
+
+In case the .tex files contain graphs, the resulting jpg's will contain a lot of blank space that you would want to crop. Therefore, once the conversion is over, this message will appear:
+
+\begin{mdframed}[style=code]
+\begin{lstlisting}[breaklines]
+Would you like for the jpg files to become cropped automatically? 'y' 'n'
+\end{lstlisting}
+\end{mdframed}
+
+\vspace{0.3cm}
+
+If you choose 'yes', nconvert.exe will execute from the command line with the parameters shown below. To find out more about these parameters, visit the \href{http://www.xnview.com/wiki/index.php/NConvert_User_Guide}{NConvert guide}.
+
+\begin{mdframed}[style=code]
+\begin{lstlisting}[breaklines]
+for /f "tokens=*" %%I in ('dir /b *.jpg') do (
+call "%nconvert%" -quiet -npcd 1 -ctype grey -q 100 -corder inter -out jpeg -D -autocrop 0 255 255 255 "%%~I"
+)
+GOTO cleanup
+\end{lstlisting}
+\end{mdframed}
+
+
+\subsection{Notes}
+
+Special attention should be paid to the use of quotes. DOS is allergic to empty spaces in filenames or paths. Including quotes solves this problem.
+
+The cleanup process deletes any files with the following extensions: .aux, .blg, .bbl, .bib.bak, .idx, .ilg, .ind, .lof, .log, .lot, .out, .toc.
+
+
+\section{How to use the converter}
+
+Copy/paste the larbat.bat file in the directory containing the files to be converted, double-click on it and follow the instructions.
+
+
+\newpage
+
+\tableofcontents
+
+
+\end{document}
